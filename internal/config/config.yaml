@@ -1,0 +1,20 @@
+database:
+  mysql:
+    default:
+      dsn: "user:pass@tcp(localhost:3306)/dbname"
+  redis:
+    default:
+      addr: "127.0.0.1:6379"
+      password: ""
+      db: 0
+      pool_size: 10
+    cache:
+      addr: "127.0.0.1:6380"
+      password: "secret"
+      db: 1
+      pool_size: 20
+jwt:
+  secret: "your-256-bit-secret"
+  expire_hours: 72
+server:
+  port: "8080"

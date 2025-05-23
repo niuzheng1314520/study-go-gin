@@ -1,19 +1,41 @@
-package router
+package routes
 
-import "github.com/gin-gonic/gin"
+import (
+    "github.com/gin-gonic/gin"
+    "github.com/niuzheng1314520/gin/internal/middleware"
+    ginSwagger "github.com/swaggo/gin-swagger"
+    swaggerFiles "github.com/swaggo/files"
+    "go.uber.org/zap"
+)
 
-func Router() *gin.Engine {
-	r := gin.Default()
+func NewRouter(
+    registry *RouteRegistry,
+    jwtSecret string,
+    logger *zap.Logger,
+) *gin.Engine {
+    r := gin.Default()
 
-	user := r.Group("/user")
+    // Swagger文档
+    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	user.GET("/list", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"code": 200,
-			"msg":  "success",
-			"data": "list",
-		})
-	})
+    // 全局中间件
+    r.Use(
+        middleware.RequestLogger(logger),
+        middleware.Recovery(logger),
+    )
 
-	return r
+    // API路由组
+    apiGroup := r.Group("/api")
+    {
+        // 公共路由
+        publicGroup := apiGroup.Group("")
+        registry.RegisterPublicRoutes(publicGroup)
+
+        // 认证路由
+        authGroup := apiGroup.Group("")
+        authGroup.Use(middleware.JWT(jwtSecret, logger))
+        registry.RegisterAuthRoutes(authGroup)
+    }
+
+    return r
 }
